@@ -405,7 +405,6 @@ let products = [
     manufacturer : "Ford",
     vin : "4T1BD1FK8EU874605"
   },
-
 ];
 
 let users = [
@@ -429,9 +428,7 @@ let users = [
   {id :18, first_name:"Hatty", last_name :"Revelle", email :"hrevelleh@constantcontact.com", password :"tD6_)u"},
   {id :19, first_name:"Filmer", last_name :"Rawlings", email :"frawlingsi@mac.com", password :"dQ4\\`"},
   {id :20, first_name:"Melba", last_name :"Timmins", email :"mtimminsj@sciencedirect.com", password :"vH3,Q"}
-
 ];
-
 
 app.get('/products', (req, res) => {
   const { manufacturer, year, carname } = req.query;
@@ -441,7 +438,7 @@ app.get('/products', (req, res) => {
     filteredProducts = filteredProducts.filter(p => p.manufacturer.toLowerCase() === manufacturer.toLowerCase());
   }
   if (year) {
-    filteredProducts = filteredProducts.filter(p => p.year === parseInt(year));
+    filteredProducts = filteredProducts.filter(p => p.year === parseInt(year, 10));
   }
   if (carname) { 
     filteredProducts = filteredProducts.filter(p => p.carname.toLowerCase() === carname.toLowerCase());
@@ -489,7 +486,17 @@ app.put('/products/:id', (req, res) => {
   res.json(product);
 });
 
-
+app.delete('/products/:id', (req, res) => {
+  const productId = parseInt(req.params.id);
+  const productIndex = products.findIndex(product => product.id === productId);
+  
+  if (productIndex !== -1) {
+    products.splice(productIndex, 1); // Remove the product
+    res.json({ message: 'Product deleted successfully.' });
+  } else {
+    res.status(404).json({ message: 'Product not found.' });
+  }
+});
 
 app.get('/users', (req, res) => {
   res.json(users);
@@ -508,6 +515,11 @@ app.post('/users', (req, res) => {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
+  const existingUser = users.find(u => u.email === email);
+  if (existingUser) {
+    return res.status(400).json({ message: 'Email already in use.' });
+  }
+
   const newUser = {
     id: users.length + 1,
     first_name,
@@ -517,7 +529,7 @@ app.post('/users', (req, res) => {
   };
 
   users.push(newUser);
-  res.status(201).json(newUser);
+  res.status(201).json({ message: 'User created successfully.', user: newUser });
 });
 
 app.put('/users/:id', (req, res) => {
@@ -532,18 +544,17 @@ app.put('/users/:id', (req, res) => {
   res.json(user);
 });
 
-app.delete('/products/:id', (req, res) => {
-  const productId = parseInt(req.params.id);
-  const productIndex = products.findIndex(product => product.id === productId);
+app.delete('/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+  const userIndex = users.findIndex(user => user.id === userId);
   
-  if (productIndex !== -1) {
-      products.splice(productIndex, 1); // Remove the product
-      res.json({ message: 'Product deleted successfully.' });
+  if (userIndex !== -1) {
+    users.splice(userIndex, 1);
+    res.json({ message: 'User deleted successfully.' });
   } else {
-      res.status(404).json({ message: 'Product not found.' });
+    res.status(404).json({ message: 'User not found.' });
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
